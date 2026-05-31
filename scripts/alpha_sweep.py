@@ -51,7 +51,6 @@ def run_sweep(idx):
             start = time.time()
             docs, _ = hybrid_search(idx, query, alpha=alpha, top_k=10)
             latency = (time.time() - start) * 1000
-
             results[alpha].append([d["doc_id"] for d in docs])
             latencies[alpha].append(latency)
 
@@ -62,6 +61,7 @@ def compute_metrics(results, latencies):
     semantic_pure = results[0.0]
 
     metrics = {}
+    per_query_diversity = {a: [] for a in ALPHAS}
 
     for alpha in ALPHAS:
         avg_overlap_bm25 = 0
@@ -69,39 +69,42 @@ def compute_metrics(results, latencies):
         for i in range(len(TEST_QUERIES)):
             set_a = set(results[alpha][i])
             overlap_bm25 = len(set_a & set(bm25_pure[i])) / 10
-            overlap_sem = len(set_a & set(semantic_pure[i])) / 10
+            overlap_sem  = len(set_a & set(semantic_pure[i])) / 10
             avg_overlap_bm25 += overlap_bm25
-            avg_overlap_sem += overlap_sem
+            avg_overlap_sem  += overlap_sem
+
+            diversity_i = 1 - (overlap_bm25 + overlap_sem) / 2
+            per_query_diversity[alpha].append(round(diversity_i, 4))
 
         avg_overlap_bm25 /= len(TEST_QUERIES)
-        avg_overlap_sem /= len(TEST_QUERIES)
-
-        diversity = 1 - (avg_overlap_bm25 + avg_overlap_sem) / 2
+        avg_overlap_sem  /= len(TEST_QUERIES)
+        diversity   = 1 - (avg_overlap_bm25 + avg_overlap_sem) / 2
         avg_latency = np.mean(latencies[alpha])
 
         metrics[alpha] = {
-            "overlap_with_bm25": round(avg_overlap_bm25, 3),
+            "overlap_with_bm25":    round(avg_overlap_bm25, 3),
             "overlap_with_semantic": round(avg_overlap_sem, 3),
-            "diversity_score": round(diversity, 3),
-            "avg_latency_ms": round(avg_latency, 2),
+            "diversity_score":       round(diversity, 3),
+            "avg_latency_ms":        round(avg_latency, 2),
+            "per_query_diversity":   per_query_diversity[alpha],
         }
 
     return metrics
 
 def plot_results(metrics):
-    alphas = list(metrics.keys())
-    overlap_bm25 = [metrics[a]["overlap_with_bm25"] for a in alphas]
-    overlap_sem = [metrics[a]["overlap_with_semantic"] for a in alphas]
-    diversity = [metrics[a]["diversity_score"] for a in alphas]
-    latency = [metrics[a]["avg_latency_ms"] for a in alphas]
+    alphas      = list(metrics.keys())
+    overlap_bm25 = [metrics[a]["overlap_with_bm25"]    for a in alphas]
+    overlap_sem  = [metrics[a]["overlap_with_semantic"] for a in alphas]
+    diversity    = [metrics[a]["diversity_score"]       for a in alphas]
+    latency      = [metrics[a]["avg_latency_ms"]        for a in alphas]
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5), facecolor='#0a0a1a')
 
     ax1 = axes[0]
     ax1.set_facecolor('#0a0a1a')
-    ax1.plot(alphas, overlap_bm25, marker='o', color='#ff6b6b', label='Overlap with BM25', linewidth=2)
-    ax1.plot(alphas, overlap_sem, marker='s', color='#00ff88', label='Overlap with Semantic', linewidth=2)
-    ax1.plot(alphas, diversity, marker='^', color='#ffd93d', label='Diversity Score', linewidth=2)
+    ax1.plot(alphas, overlap_bm25, marker='o', color='#ff6b6b', label='Overlap with BM25',     linewidth=2)
+    ax1.plot(alphas, overlap_sem,  marker='s', color='#00ff88', label='Overlap with Semantic',  linewidth=2)
+    ax1.plot(alphas, diversity,    marker='^', color='#ffd93d', label='Diversity Score',         linewidth=2)
     ax1.set_xlabel('Alpha (BM25 weight)', color='white')
     ax1.set_ylabel('Score', color='white')
     ax1.set_title('Hybrid Retrieval: Alpha vs Result Composition', color='#00ff88', fontweight='bold')
@@ -128,9 +131,12 @@ def plot_results(metrics):
     print(f"\nChart saved: {output}")
 
 def save_metrics(metrics):
+    serializable = {}
+    for k, v in metrics.items():
+        serializable[str(k)] = v
     output = os.path.join(os.path.dirname(__file__), '..', 'benchmarks', 'alpha_sweep_metrics.json')
     with open(output, 'w') as f:
-        json.dump(metrics, f, indent=2)
+        json.dump(serializable, f, indent=2)
     print(f"Metrics saved: {output}")
 
 def main():
@@ -153,7 +159,6 @@ def main():
 
     save_metrics(metrics)
     plot_results(metrics)
-
     print("\nDone.")
 
 if __name__ == "__main__":
