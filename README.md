@@ -116,7 +116,6 @@ Bootstrap significance testing (n=10,000 resamples, real per-query diversity sco
 | `/health` | GET | Service health check |
 | `/docs` | GET | Swagger UI |
 
----
 
 ## Project Structure
 Lurox/
