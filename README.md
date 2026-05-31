@@ -118,6 +118,8 @@ Bootstrap significance testing (n=10,000 resamples, real per-query diversity sco
 
 
 ## Project Structure
+
+```
 Lurox/
 ├── api/
 │   ├── main.py            # FastAPI endpoints
@@ -152,8 +154,7 @@ Lurox/
 │   └── script.js
 ├── citation.cff
 └── render.yaml
-
----
+```
 
 ## Reproduce Results
 
