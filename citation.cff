@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use Lurox in your research, please cite:"
+type: software
+authors:
+  - family-names: Agarwal
+    given-names: Anmol
+    affiliation: JECRC University, Jaipur, India
+    email: anmolagarwal325@gmail.com
+title: "Lurox: A Sub-millisecond Hybrid Retrieval System with Grounded LLM Generation"
+version: 1.0.0
+date-released: 2026-05-01
+url: "https://github.com/AnmolAgarwal4/Lurox"
+repository-code: "https://github.com/AnmolAgarwal4/Lurox"
+license: MIT
+keywords:
+  - information-retrieval
+  - BM25
+  - hybrid-search
+  - RAG
+  - C
+  - systems
+abstract: "An end-to-end hybrid retrieval-augmented search system built from scratch in C with no external IR libraries."
